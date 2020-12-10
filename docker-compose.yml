@@ -1,0 +1,47 @@
+version: "2"
+services:
+  php:
+    build: ./php
+    working_dir: /var/www/laravel
+    volumes:
+      - ./html/:/var/www/laravel
+
+  nginx:
+    build: ./nginx
+    working_dir: /var/www/laravel
+    volumes_from:
+      - php
+    ports:
+      - 80:80
+
+  database:
+    image: mysql:5.7
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=laravel
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3306:3306"
+
+  composer:
+    build: ./php
+    working_dir: /var/www/laravel
+    volumes_from:
+      - php
+    command: "composer install"
+
+  myadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - 8000:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=database
+      - UPLOAD_LIMIT=3000000000
+    restart: always
+    depends_on:
+      - database
